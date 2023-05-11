@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<!-- create table -->
+<body>
+	<table id="calcu">
+		<tr>
+			<td colspan="">Nilai A:</td>
+			<td colspan="3"><input type="text" id="nilai_a"></td>
+			<!-- clr() function will call clr to clear all value-->
+			<td><input type="button" value="clear" onclick="clra()"/> </td>
+		</tr>
+		 
+		<tr>
+			<td colspan="">Nilai B:</td>
+			<td colspan="3"><input type="text" id="nilai_b"></td>
+			<!-- clr() function will call clr to clear all value-->
+			<td><input type="button" value="clear" onclick="clrb()"/> </td>
+		</tr>
+		<tr>
+			<td><input type="button" value="+" onclick="tambah()" /> </td>
+			<td><input type="button" value="-" onclick="kurang()" /> </td>
+			<td><input type="button" value="*" onclick="kali()" /> </td>
+			<td><input type="button" value="/" onclick="bagi()" /> </td>
+		</tr>
+		 <tr>
+			<td colspan="">Hasil</td>
+			<td colspan="3"><input type="text" id="nilai_hasil"></td>
+		 </tr>
+	</table>
+	<script>
+		function clra(){
+			document.getElementById('nilai_a').value="0";
+		}
+		function clrb(){
+			document.getElementById('nilai_b').value="0";
+		}
+		function tambah(){
+			let a = parseInt(document.getElementById('nilai_a').value);
+			let b = parseInt(document.getElementById('nilai_b').value);
+			let hasil = a+b
+			document.getElementById('nilai_hasil').value=hasil;
+		}
+		function kurang(){
+			let a = parseInt(document.getElementById('nilai_a').value);
+			let b = parseInt(document.getElementById('nilai_b').value);
+			let hasil = a-b
+			document.getElementById('nilai_hasil').value=hasil;
+		}
+		function kali(){
+			let a = parseInt(document.getElementById('nilai_a').value);
+			let b = parseInt(document.getElementById('nilai_b').value);
+			let hasil = a*b
+			document.getElementById('nilai_hasil').value=hasil;
+		}
+		function bagi(){
+			let a = parseInt(document.getElementById('nilai_a').value);
+			let b = parseInt(document.getElementById('nilai_b').value);
+			let hasil = a/b
+			document.getElementById('nilai_hasil').value=hasil;
+		}
+		</script>	
+	</body>
+</html>
