@@ -1,0 +1,533 @@
+# controller
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+class ProgramStudi extends CI_Controller {
+	function __construct(){
+		parent::__construct();
+		$this->load->model('m_programstudi', 'programstudi');
+		$this->load->library('pagination');
+		$this->load->library(array('form_validation'));
+		$this->load->library('session');
+		$this->load->helper(array('string'));
+		$this->load->helper('url');
+		$this->load->helper('form');
+		date_default_timezone_set('Asia/Jakarta');
+	}
+	public function index()
+	{
+		$data['programstudi'] = $this->programstudi->list_all();
+		//print_r($data);
+		$this->load->view('programstudi/list_programstudi', $data);
+	}
+
+	public function tambah()
+	{
+		$respon['message']="";
+		if($_POST){
+			$_data['id_program_studi'] = $this->input->post('id_program_studi');
+			$_data['nama_program_studi'] = $this->input->post('nama_program_studi');
+			$_data['deskripsi_program_studi'] = $this->input->post('deskripsi_program_studi');
+			
+			//add to database
+			$result = $this->programstudi->add($_data);
+			if($result=='duplicate'){
+				$message = "<span class='label label-danger'>Tambah Data gagal! Data sudah terpakai</span>";
+			}elseif($result=='failed'){
+				$message = "<span class='label label-danger'>Tambah Data gagal!</span>";
+			}else{
+				$message = "<span class='label label-success'>Tambah Data sukses!</span>";
+			}
+			$respon['message']=$message;
+		}
+		$this->load->view('programstudi/tambah_programstudi', $respon);
+	}
+	public function edit($id)
+	{
+		$respon['message'] ="";
+		if($_POST){
+			$data['id_program_studi'] = $this->input->post('id_program_studi');
+			$data['nama_program_studi'] = $this->input->post('nama_program_studi');
+			$data['deskripsi_program_studi'] = $this->input->post('deskripsi_program_studi');
+			//model update data
+			$result = $this->programstudi->update($data);
+			if($result=="duplicate"){
+				$message = "Update data gagal. Data sudah terpakai";
+			}elseif($result=="failed"){
+				$message="Update data gagal.";
+			}else{
+				$message= "Update data berhasil!.";
+			}
+			$respon['$message'] = $message;
+		}
+		$fetch = $this->programstudi->fetch($id);
+		$respon["programstudi"]=$fetch;
+		$this->load->view('programstudi/edit_programstudi', $respon);
+	}
+	public function delete($id="")
+	{
+		$delete= $this->programstudi->delete($id);
+		redirect("programstudi");
+	}
+}	
+
+# Model
+
+<?php
+class M_ProgramStudi extends CI_Model{
+	function __construct(){
+		parent::__construct();
+		$this->load->database();
+		$this->load->library('session');
+		$this->load->helper(array('string'));
+	}
+	function list_all($per_page=20, $starting=0){
+		$this->db->order_by('nama_program_studi', 'asc');
+		$data = $this->db->get('table_program_studi', $per_page, $starting);
+		return $data;
+	}
+	function add($_data){
+		foreach($_data as $field => $value){
+			$data[$field] = $value;
+		}
+		if($this->db->insert('table_program_studi', $data)){
+			return 'success';
+		}else{
+			return 'failed';
+		}
+	}
+	function fetch ($id){
+		$data = $this->db->get_where("table_program_studi", array("id_program_studi"=> $id));
+		return $data->row_array();
+	}
+	function exist($id){
+		$data = $this->db->get_where("table_program_studi", array("id_program_studi"=> $id));
+		if($data->num_rows() >= 1){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	function change($id ="", $field ="", $value=""){
+		if($this->exist($id) == true){
+			$this->db->set($field, $value);
+			$this->db->where("id_program_studi", $id);
+			$this->db->update("table_program_studi");
+			return true;
+		}else{
+			return false;
+		}
+	}
+	function update($data){
+		foreach($data as $field => $value){
+			if(!$this->change($data["id_program_studi"], $field, $value)) return false;
+		}
+	}
+	function delete($id=''){
+		if($this->db->delete('table_program_studi', array('id_program_studi'=>$id))){
+			return true;
+		}else{
+			return false;
+		}
+	}
+}
+
+# edit view
+
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Welcome to CodeIgniter</title>
+
+	<style type="text/css">
+
+	::selection { background-color: #E13300; color: white; }
+	::-moz-selection { background-color: #E13300; color: white; }
+
+	body {
+		background-color: #fff;
+		margin: 40px;
+		font: 13px/20px normal Helvetica, Arial, sans-serif;
+		color: #4F5155;
+	}
+
+	a {
+		color: #003399;
+		background-color: transparent;
+		font-weight: normal;
+		text-decoration: none;
+	}
+
+	a:hover {
+		color: #97310e;
+	}
+
+	h1 {
+		color: #444;
+		background-color: transparent;
+		border-bottom: 1px solid #D0D0D0;
+		font-size: 19px;
+		font-weight: normal;
+		margin: 0 0 14px 0;
+		padding: 14px 15px 10px 15px;
+	}
+
+	code {
+		font-family: Consolas, Monaco, Courier New, Courier, monospace;
+		font-size: 12px;
+		background-color: #f9f9f9;
+		border: 1px solid #D0D0D0;
+		color: #002166;
+		display: block;
+		margin: 14px 0 14px 0;
+		padding: 12px 10px 12px 10px;
+	}
+
+	#body {
+		margin: 0 15px 0 15px;
+		min-height: 96px;
+	}
+
+	p {
+		margin: 0 0 10px;
+		padding:0;
+	}
+
+	p.footer {
+		text-align: right;
+		font-size: 11px;
+		border-top: 1px solid #D0D0D0;
+		line-height: 32px;
+		padding: 0 10px 0 10px;
+		margin: 20px 0 0 0;
+	}
+
+	#container {
+		margin: 10px;
+		border: 1px solid #D0D0D0;
+		box-shadow: 0 0 8px #D0D0D0;
+	}
+	</style>
+</head>
+<body>
+
+<div id="container">
+	<h1>Welcome Update Program Studi !<a href="<?php echo base_url()."index.php/ProgramStudi"?>"<button>Program Studi</button></a></h1>
+	<div id="body">
+		<form action="<?php echo base_url()."index.php/".uri_string()?>" method="POST">
+        <?php
+            if(!empty($message)){
+                echo $message;
+            }
+        ?>
+			<table border="1">
+				<tr>
+					<td>
+						Id Program Studi
+					</td>
+					<td>
+						<input name="id_program_studi" type="text" placeholder="Input Id Program Studi" value="<?php echo $programstudi ['id_program_studi']?>"readonly>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Nama Program Studi
+					</td>
+					<td>
+						<input name="nama_program_studi" type="text" value="<?php echo $programstudi ['nama_program_studi']?>" >
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Deskripsi Program Studi
+					</td>
+					<td>
+						<input name="deskripsi_program_studi" type="text" value="<?php echo $programstudi ['deskripsi_program_studi']?>">
+					</td>
+				</tr>
+			</table>
+		</form>
+        <!--daftar mahasiswa-->
+        <br>
+        <a href="<?php echo base_url()."index.php/programstudi" ?>">
+            <button>Lihat Data Program Studi</button>
+        </a>
+	</div>
+
+	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds. <?php echo  (ENVIRONMENT === 'development') ?  'CodeIgniter Version <strong>' . CI_VERSION . '</strong>' : '' ?></p>
+</div>
+
+</body>
+</html>
+
+# list view
+
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Welcome to CodeIgniter</title>
+
+	<style type="text/css">
+
+	::selection { background-color: #E13300; color: white; }
+	::-moz-selection { background-color: #E13300; color: white; }
+
+	body {
+		background-color: #fff;
+		margin: 40px;
+		font: 13px/20px normal Helvetica, Arial, sans-serif;
+		color: #4F5155;
+	}
+
+	a {
+		color: #003399;
+		background-color: transparent;
+		font-weight: normal;
+		text-decoration: none;
+	}
+
+	a:hover {
+		color: #97310e;
+	}
+
+	h1 {
+		color: #444;
+		background-color: transparent;
+		border-bottom: 1px solid #D0D0D0;
+		font-size: 19px;
+		font-weight: normal;
+		margin: 0 0 14px 0;
+		padding: 14px 15px 10px 15px;
+	}
+
+	code {
+		font-family: Consolas, Monaco, Courier New, Courier, monospace;
+		font-size: 12px;
+		background-color: #f9f9f9;
+		border: 1px solid #D0D0D0;
+		color: #002166;
+		display: block;
+		margin: 14px 0 14px 0;
+		padding: 12px 10px 12px 10px;
+	}
+
+	#body {
+		margin: 0 15px 0 15px;
+		min-height: 96px;
+	}
+
+	p {
+		margin: 0 0 10px;
+		padding:0;
+	}
+
+	p.footer {
+		text-align: right;
+		font-size: 11px;
+		border-top: 1px solid #D0D0D0;
+		line-height: 32px;
+		padding: 0 10px 0 10px;
+		margin: 20px 0 0 0;
+	}
+
+	#container {
+		margin: 10px;
+		border: 1px solid #D0D0D0;
+		box-shadow: 0 0 8px #D0D0D0;
+	}
+	</style>
+</head>
+<body>
+
+<div id="container">
+	<h1>Tutorial daftar Program Studi!</h1>
+	
+	<div id="body">
+		<table border="1">
+			<tr>
+				<td>
+					Id Program Studi
+				</td>
+				<td>
+					Nama Program Studi
+				</td>
+				<td>
+					Deskripsi Program Studi
+				</td>
+			</tr>
+
+			<?php
+			//print_r($mahasiswa->result_array());
+			foreach($programstudi->result_array() as $item):
+			?>
+			<tr>
+				<td>
+					<?php echo $item['id_program_studi']?>
+				</td>
+				<td>
+					<?php echo $item['nama_program_studi']?>
+				</td>
+				<td>
+					<?php echo $item['deskripsi_program_studi']?>
+				</td>
+				<td>
+					<a href="<?php echo base_url()."index.php/programstudi/edit/".$item['id_program_studi'] ?> ">edit</a>|<a
+						href="<?php echo base_url()."index.php/programstudi/delete/".$item['id_program_studi']?>">hapus</a>
+				</td>
+			</tr>
+			<?php endforeach;?>
+		</table>
+		<!--tabel akhir-->
+		<br>
+		<a href="<?php echo base_url(). "index.php/programstudi/tambah" ?>">
+				<button>Tambah Data Program Studi +</button>
+		</a>
+	</div>
+
+	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds. <?php echo  (ENVIRONMENT === 'development') ?  'CodeIgniter Version <strong>' . CI_VERSION . '</strong>' : '' ?></p>
+</div>
+
+</body>
+</html>
+
+# tambah view
+
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Welcome to CodeIgniter</title>
+
+	<style type="text/css">
+
+	::selection { background-color: #E13300; color: white; }
+	::-moz-selection { background-color: #E13300; color: white; }
+
+	body {
+		background-color: #fff;
+		margin: 40px;
+		font: 13px/20px normal Helvetica, Arial, sans-serif;
+		color: #4F5155;
+	}
+
+	a {
+		color: #003399;
+		background-color: transparent;
+		font-weight: normal;
+		text-decoration: none;
+	}
+
+	a:hover {
+		color: #97310e;
+	}
+
+	h1 {
+		color: #444;
+		background-color: transparent;
+		border-bottom: 1px solid #D0D0D0;
+		font-size: 19px;
+		font-weight: normal;
+		margin: 0 0 14px 0;
+		padding: 14px 15px 10px 15px;
+	}
+
+	code {
+		font-family: Consolas, Monaco, Courier New, Courier, monospace;
+		font-size: 12px;
+		background-color: #f9f9f9;
+		border: 1px solid #D0D0D0;
+		color: #002166;
+		display: block;
+		margin: 14px 0 14px 0;
+		padding: 12px 10px 12px 10px;
+	}
+
+	#body {
+		margin: 0 15px 0 15px;
+		min-height: 96px;
+	}
+
+	p {
+		margin: 0 0 10px;
+		padding:0;
+	}
+
+	p.footer {
+		text-align: right;
+		font-size: 11px;
+		border-top: 1px solid #D0D0D0;
+		line-height: 32px;
+		padding: 0 10px 0 10px;
+		margin: 20px 0 0 0;
+	}
+
+	#container {
+		margin: 10px;
+		border: 1px solid #D0D0D0;
+		box-shadow: 0 0 8px #D0D0D0;
+	}
+	</style>
+</head>
+<body>
+
+<div id="container">
+	<h1>Welcome to CodeIgniter!</h1>
+	<h1><?php if(isset($message)) { echo $message; }?></h1>
+	<div id="body">
+		<form class="user" action="<?php echo base_url()."index.php/".uri_string()?>" method="POST">
+			<table border="1">
+				<tr>
+					<td>
+						Id Program Studi
+					</td>
+					<td>
+						<input name="id_program_studi" type="text" class="form-control" placeholder="...Id Program Studi..." maxlength="25">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Nama Program Studi
+					</td>
+					<td>
+						<input name="nama_program_studi" type="text" class="form-control" placeholder="...Nama Program Studi..." maxlength="255">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Deskripsi Program Studi
+					</td>
+					<td>
+						<input name="deskripsi_program_studi" type="text" class="form-control" placeholder="...Deskripsi Program Studi...">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<input type="submit" name="mysubmit" value="Save" class="btn btn-primary btn-user btn-block"/>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<br>
+		<a href="<?php echo base_url(). "index.php/programstudi" ?>">
+		<button>Lihat Data Program Studi</button>
+		</a>
+	</div>
+
+	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds. <?php echo  (ENVIRONMENT === 'development') ?  'CodeIgniter Version <strong>' . CI_VERSION . '</strong>' : '' ?></p>
+</div>
+
+</body>
+</html>
+
+
+	
+
+	
+	
